@@ -94,7 +94,7 @@ under `griffon-app/resources` in order to be picked up automatically by the plug
 The `withHibernate3()` dynamic method will be added to controllers by default. You can
 change this setting by adding a configuration flag in `griffon-app/conf/Config.groovy`
 
-    griffon.hibernate.injectInto = ['controller', 'service']
+    griffon.hibernate3.injectInto = ['controller', 'service']
 
 ### Events
 
@@ -124,7 +124,7 @@ default sessionFactory block is used.
 
 ### Example
 
-A trivial sample application can be found at [https://github.com/aalmiray/griffon_sample_apps/tree/master/persistence/hibernate][3]
+A trivial sample application can be found at [https://github.com/aalmiray/griffon_sample_apps/tree/master/persistence/hibernate3][3]
 
 Testing
 -------
@@ -160,6 +160,6 @@ This implementation may be used in the following way
 
 [1]: http://hibernate.org/
 [2]: /plugin/datasource 
-[3]: https://github.com/aalmiray/griffon_sample_apps/tree/master/persistence/hibernate
+[3]: https://github.com/aalmiray/griffon_sample_apps/tree/master/persistence/hibernate3
 '''
 }
