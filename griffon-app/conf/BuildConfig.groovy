@@ -12,7 +12,7 @@ griffon.project.dependency.resolution = {
                 "org.hibernate:hibernate-entitymanager:$hbmVersion") {
             excludes 'ant', 'javassist'
         }
-        compile 'org.javassist:javassist:3.15.0-GA'
+        compile 'org.javassist:javassist:3.16.1-GA'
     }
 }
 
