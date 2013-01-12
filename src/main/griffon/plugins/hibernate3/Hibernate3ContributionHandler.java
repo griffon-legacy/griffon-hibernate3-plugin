@@ -22,7 +22,11 @@ import groovy.lang.Closure;
 /**
  * @author Andres Almiray
  */
-public interface Hibernate3Provider {
+public interface Hibernate3ContributionHandler {
+    void setHibernate3Provider(Hibernate3Provider provider);
+
+    Hibernate3Provider getHibernate3Provider();
+
     <R> R withHibernate3(Closure<R> closure);
 
     <R> R withHibernate3(String sessionFactoryName, Closure<R> closure);

@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package griffon.plugins.hibernate3;
-
-import griffon.util.CallableWithArgs;
-import groovy.lang.Closure;
+package dsld
 
 /**
  * @author Andres Almiray
  */
-public interface Hibernate3Provider {
-    <R> R withHibernate3(Closure<R> closure);
 
-    <R> R withHibernate3(String sessionFactoryName, Closure<R> closure);
-
-    <R> R withHibernate3(CallableWithArgs<R> callable);
-
-    <R> R withHibernate3(String sessionFactoryName, CallableWithArgs<R> callable);
+contribute(enclosingClass(annotatedBy('griffon.plugins.hibernate3.Hibernate3Aware'))) {
+    provider = "Hibernate3 DSL"
+    delegatesTo "griffon.plugins.hibernate3.Hibernate3ContributionHandler"
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import griffon.plugins.datasource.DataSourceHolder
 import griffon.plugins.hibernate3.internal.HibernateConfigurationHelper
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
-import griffon.util.CallableWithArgs
 import griffon.util.ConfigUtils
 import griffon.core.GriffonApplication
 
@@ -31,34 +30,25 @@ import javax.sql.DataSource
  * @author Andres Almiray
  */
 @Singleton
-final class Hibernate3Connector implements Hibernate3Provider {
+final class Hibernate3Connector {
+    private static final String DEFAULT = 'default'
     private bootstrap
-
-    Object withHibernate3(String sessionFactoryName = 'default', Closure closure) {
-        SessionFactoryHolder.instance.withHibernate3(sessionFactoryName, closure)
-    }
-
-    public <T> T withHibernate3(String sessionFactoryName = 'default', CallableWithArgs<T> callable) {
-        SessionFactoryHolder.instance.withHibernate3(sessionFactoryName, callable)
-    }
-
-    // ======================================================
 
     ConfigObject createConfig(GriffonApplication app) {
         ConfigUtils.loadConfigWithI18n('Hibernate3Config')
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {
-        return dataSourceName == 'default' ? config.sessionFactory : config.sessionFactories[dataSourceName]
+        return dataSourceName == DEFAULT ? config.sessionFactory : config.sessionFactories[dataSourceName]
     }
 
-    SessionFactory connect(GriffonApplication app, String dataSourceName = 'default') {
-        if (SessionFactoryHolder.instance.isSessionFactoryAvailable(dataSourceName)) {
-            return SessionFactoryHolder.instance.getSessionFactory(dataSourceName)
+    SessionFactory connect(GriffonApplication app, String dataSourceName = DEFAULT) {
+        if (Hibernate3Holder.instance.isSessionFactoryAvailable(dataSourceName)) {
+            return Hibernate3Holder.instance.getSessionFactory(dataSourceName)
         }
 
         ConfigObject dsConfig = DataSourceConnector.instance.createConfig(app)
-        if (dataSourceName == 'default') {
+        if (dataSourceName == DEFAULT) {
             dsConfig.dataSource.schema.skip = true
         } else {
             dsConfig.dataSources."$dataSourceName".schema.skip = true
@@ -70,24 +60,36 @@ final class Hibernate3Connector implements Hibernate3Provider {
         Configuration configuration = createConfiguration(app, config, dsConfig, dataSourceName)
         createSchema(dsConfig.dbCreate ?: 'create-drop', configuration)
         SessionFactory sessionFactory = configuration.buildSessionFactory()
-        SessionFactoryHolder.instance.setSessionFactory(dataSourceName, sessionFactory)
+        Hibernate3Holder.instance.setSessionFactory(dataSourceName, sessionFactory)
         bootstrap = app.class.classLoader.loadClass('BootstrapHibernate3').newInstance()
         bootstrap.metaClass.app = app
-        SessionFactoryHolder.instance.withHibernate3(dataSourceName) { dsName, session -> bootstrap.init(dsName, session) }
+        resolveHibernate3Provider(app).withHibernate3(dataSourceName) { dsName, session -> bootstrap.init(dsName, session) }
         app.event('Hibernate3ConnectEnd', [dataSourceName, dataSource])
         sessionFactory
     }
 
-    void disconnect(GriffonApplication app, String dataSourceName = 'default') {
-        if (!SessionFactoryHolder.instance.isSessionFactoryAvailable(dataSourceName)) return
+    void disconnect(GriffonApplication app, String dataSourceName = DEFAULT) {
+        if (!Hibernate3Holder.instance.isSessionFactoryAvailable(dataSourceName)) return
 
-        SessionFactory sessionFactory = SessionFactoryHolder.instance.getSessionFactory(dataSourceName)
+        SessionFactory sessionFactory = Hibernate3Holder.instance.getSessionFactory(dataSourceName)
         app.event('Hibernate3DisconnectStart', [dataSourceName, sessionFactory])
-        SessionFactoryHolder.instance.withHibernate3(dataSourceName) { dsName, session -> bootstrap.destroy(dsName, session) }
-        SessionFactoryHolder.instance.disconnectSessionFactory(dataSourceName)
+        resolveHibernate3Provider(app).withHibernate3(dataSourceName) { dsName, session -> bootstrap.destroy(dsName, session) }
+        Hibernate3Holder.instance.disconnectSessionFactory(dataSourceName)
         app.event('Hibernate3DisconnectEnd', [dataSourceName])
         ConfigObject config = DataSourceConnector.instance.createConfig(app)
         DataSourceConnector.instance.disconnect(app, config, dataSourceName)
+    }
+
+    Hibernate3Provider resolveHibernate3Provider(GriffonApplication app) {
+        def hibernate3Provider = app.config.hibernate3Provider
+        if (hibernate3Provider instanceof Class) {
+            hibernate3Provider = hibernate3Provider.newInstance()
+            app.config.hibernate3Provider = hibernate3Provider
+        } else if (!hibernate3Provider) {
+            hibernate3Provider = DefaultHibernate3Provider.instance
+            app.config.hibernate3Provider = hibernate3Provider
+        }
+        hibernate3Provider
     }
 
     private Configuration createConfiguration(GriffonApplication app, ConfigObject config, ConfigObject dsConfig, String dataSourceName) {

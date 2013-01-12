@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import griffon.core.GriffonClass
 import griffon.core.GriffonApplication
 import griffon.plugins.hibernate3.Hibernate3Connector
 import griffon.plugins.hibernate3.Hibernate3Enhancer
+import griffon.plugins.hibernate3.Hibernate3ContributionHandler
 
 /**
  * @author Andres Almiray
@@ -31,6 +32,7 @@ class Hibernate3GriffonAddon {
         def types = app.config.griffon?.hibernate3?.injectInto ?: ['controller']
         for(String type : types) {
             for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {
+                if (Hibernate3ContributionHandler.isAssignableFrom(gc.clazz)) continue
                 Hibernate3Enhancer.enhance(gc.metaClass)
             }
         }

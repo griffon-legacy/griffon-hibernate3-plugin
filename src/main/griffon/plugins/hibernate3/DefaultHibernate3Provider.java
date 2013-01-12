@@ -16,18 +16,25 @@
 
 package griffon.plugins.hibernate3;
 
-import griffon.util.CallableWithArgs;
-import groovy.lang.Closure;
+
+import org.hibernate.SessionFactory;
 
 /**
  * @author Andres Almiray
  */
-public interface Hibernate3Provider {
-    <R> R withHibernate3(Closure<R> closure);
+public class DefaultHibernate3Provider extends AbstractHibernate3Provider {
+    private static final DefaultHibernate3Provider INSTANCE;
 
-    <R> R withHibernate3(String sessionFactoryName, Closure<R> closure);
+    static {
+        INSTANCE = new DefaultHibernate3Provider();
+    }
 
-    <R> R withHibernate3(CallableWithArgs<R> callable);
+    public static DefaultHibernate3Provider getInstance() {
+        return INSTANCE;
+    }
 
-    <R> R withHibernate3(String sessionFactoryName, CallableWithArgs<R> callable);
+    @Override
+    protected SessionFactory getSessionFactory(String sessionFactoryName) {
+        return Hibernate3Holder.getInstance().fetchSessionFactory(sessionFactoryName);
+    }
 }

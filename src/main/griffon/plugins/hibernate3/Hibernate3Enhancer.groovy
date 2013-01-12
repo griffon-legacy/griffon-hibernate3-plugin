@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,20 +24,21 @@ import org.slf4j.LoggerFactory
  * @author Andres Almiray
  */
 final class Hibernate3Enhancer {
+    private static final String DEFAULT = 'default'
     private static final Logger LOG = LoggerFactory.getLogger(Hibernate3Enhancer)
 
     private Hibernate3Enhancer() {}
-
-    static void enhance(MetaClass mc, Hibernate3Provider provider = SessionFactoryHolder.instance) {
-        if (LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
+    
+    static void enhance(MetaClass mc, Hibernate3Provider provider = DefaultHibernate3Provider.instance) {
+        if(LOG.debugEnabled) LOG.debug("Enhancing $mc with $provider")
         mc.withHibernate3 = {Closure closure ->
-            provider.withHibernate3('default', closure)
+            provider.withHibernate3(DEFAULT, closure)
         }
         mc.withHibernate3 << {String sessionFactoryName, Closure closure ->
             provider.withHibernate3(sessionFactoryName, closure)
         }
         mc.withHibernate3 << {CallableWithArgs callable ->
-            provider.instance.withHibernate3('default', callable)
+            provider.withHibernate3(DEFAULT, callable)
         }
         mc.withHibernate3 << {String sessionFactoryName, CallableWithArgs callable ->
             provider.withHibernate3(sessionFactoryName, callable)

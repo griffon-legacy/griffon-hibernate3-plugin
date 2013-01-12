@@ -1,6 +1,6 @@
 target
 .idea
-hibernate-griffonPluginFixes.iml
-hibernate-griffonPlugins.iml
-hibernate.iml
 release_notes.md
+hibernate3-griffonPluginFixes.iml
+hibernate3-griffonPlugins.iml
+hibernate3.iml
