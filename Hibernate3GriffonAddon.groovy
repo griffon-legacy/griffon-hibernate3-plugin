@@ -24,11 +24,8 @@ import griffon.plugins.hibernate3.Hibernate3ContributionHandler
  * @author Andres Almiray
  */
 class Hibernate3GriffonAddon {
-    void addonInit(GriffonApplication app) {
-        Hibernate3Connector.instance.connect(app)
-    }
-
     void addonPostInit(GriffonApplication app) {
+        Hibernate3Connector.instance.connect(app)
         def types = app.config.griffon?.hibernate3?.injectInto ?: ['controller']
         for(String type : types) {
             for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {
