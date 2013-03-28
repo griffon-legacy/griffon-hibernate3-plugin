@@ -64,6 +64,7 @@ final class Hibernate3Connector {
         createSchema(dsConfig, dataSourceName, configuration)
         SessionFactory sessionFactory = configuration.buildSessionFactory()
         Hibernate3Holder.instance.setSessionFactory(dataSourceName, sessionFactory)
+        app.event('Hibernate3SessionFactoryCreated', [config, dataSourceName, sessionFactory])
         bootstrap = app.class.classLoader.loadClass('BootstrapHibernate3').newInstance()
         bootstrap.metaClass.app = app
         resolveHibernate3Provider(app).withHibernate3(dataSourceName) { dsName, session -> bootstrap.init(dsName, session) }
