@@ -20,12 +20,18 @@ import griffon.plugins.hibernate3.Hibernate3Connector
 import griffon.plugins.hibernate3.Hibernate3Enhancer
 import griffon.plugins.hibernate3.Hibernate3ContributionHandler
 
+import static griffon.util.ConfigUtils.getConfigValueAsBoolean
+
+
 /**
  * @author Andres Almiray
  */
 class Hibernate3GriffonAddon {
     void addonPostInit(GriffonApplication app) {
-        Hibernate3Connector.instance.connect(app)
+        ConfigObject config = Hibernate3Connector.instance.createConfig(app)
+        if (getConfigValueAsBoolean(app.config, 'griffon.hibernate3.connect.onstartup', true)) {
+            Hibernate3Connector.instance.connect(app, config)
+        }
         def types = app.config.griffon?.hibernate3?.injectInto ?: ['controller']
         for(String type : types) {
             for(GriffonClass gc : app.artifactManager.getClassesOfType(type)) {

@@ -42,10 +42,15 @@ final class Hibernate3Connector {
     }
 
     private ConfigObject narrowConfig(ConfigObject config, String dataSourceName) {
-        return dataSourceName == DEFAULT ? config.sessionFactory : config.sessionFactories[dataSourceName]
+        if (config.containsKey('sessionFactory') && dataSourceName == DEFAULT) {
+            return config.sessionFactory
+        } else if (config.containsKey('sessionFactories')) {
+            return config.sessionFactories[dataSourceName]
+        }
+        return config
     }
 
-    SessionFactory connect(GriffonApplication app, String dataSourceName = DEFAULT) {
+    SessionFactory connect(GriffonApplication app, ConfigObject config, String dataSourceName = DEFAULT) {
         if (Hibernate3Holder.instance.isSessionFactoryAvailable(dataSourceName)) {
             return Hibernate3Holder.instance.getSessionFactory(dataSourceName)
         }
@@ -58,7 +63,7 @@ final class Hibernate3Connector {
         }
         DataSource dataSource = DataSourceConnector.instance.connect(app, dsConfig, dataSourceName)
 
-        ConfigObject config = narrowConfig(createConfig(app), dataSourceName)
+        config = narrowConfig(config, dataSourceName)
         app.event('Hibernate3ConnectStart', [config, dataSourceName])
         Configuration configuration = createConfiguration(app, config, dsConfig, dataSourceName)
         createSchema(dsConfig, dataSourceName, configuration)
@@ -80,8 +85,8 @@ final class Hibernate3Connector {
         resolveHibernate3Provider(app).withHibernate3(dataSourceName) { dsName, session -> bootstrap.destroy(dsName, session) }
         Hibernate3Holder.instance.disconnectSessionFactory(dataSourceName)
         app.event('Hibernate3DisconnectEnd', [dataSourceName])
-        ConfigObject config = DataSourceConnector.instance.createConfig(app)
-        DataSourceConnector.instance.disconnect(app, config, dataSourceName)
+        ConfigObject dsconfig = DataSourceConnector.instance.createConfig(app)
+        DataSourceConnector.instance.disconnect(app, dsconfig, dataSourceName)
     }
 
     Hibernate3Provider resolveHibernate3Provider(GriffonApplication app) {
