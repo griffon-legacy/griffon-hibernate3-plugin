@@ -33,6 +33,8 @@ public class DefaultHibernate3Provider extends AbstractHibernate3Provider {
         return INSTANCE;
     }
 
+    private DefaultHibernate3Provider() {}
+
     @Override
     protected SessionFactory getSessionFactory(String sessionFactoryName) {
         return Hibernate3Holder.getInstance().fetchSessionFactory(sessionFactoryName);
